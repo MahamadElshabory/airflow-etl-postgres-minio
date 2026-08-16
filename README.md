@@ -1,5 +1,5 @@
-## Airflow ETL Pipeline: PostgreSQL ↔ MinIO/S3
-# Overview
+# Airflow ETL Pipeline: PostgreSQL ↔ MinIO/S3
+## Overview
 
 This project automates a common data engineering task: moving data out of an operational database and into object storage on a schedule, reliably and with visibility into failures. Rather than a one-off script, it's built as a proper Airflow DAG — meaning the pipeline has defined dependencies between steps, automatic retries if a step fails, and centralized logging so you can see exactly what happened and when.
 
