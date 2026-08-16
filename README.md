@@ -7,27 +7,34 @@ The underlying pattern — extract, transform, load, with orchestration handling
 
 Everything runs in Docker Compose — Airflow, PostgreSQL, and MinIO — so the whole pipeline can be spun up identically on any machine.
 
-What it does
+
+## What it does
 Extracts data from PostgreSQL on a schedule
 Transforms/validates it in a Python task
 Loads the result into MinIO/S3 as object storage
 Uses Airflow Sensors to wait on upstream conditions before running downstream tasks
 Fully Dockerized — Airflow, PostgreSQL, and MinIO all run via Docker Compose
-Tech Stack
+
+
+## Tech Stack
 
 Apache Airflow PostgreSQL MinIO/S3 Docker Compose Python TaskFlow API
 
-Architecture
+
+## Architecture
 PostgreSQL --[Extract Task]--> Transform Task --[Load Task]--> MinIO/S3
                      ↑
         Airflow DAG orchestrates scheduling, retries, and logging across all tasks
-Run locally
+
+        
+## Run locally
 bash
 docker-compose up --build
 
 Airflow UI available at localhost:8080.
 
-Possible next steps
+
+## Possible next steps
 Add data quality checks as a dedicated Airflow task
 Add alerting on task failure (e.g. Slack/email on DAG failure)
 Parameterize the DAG for multiple source tables
