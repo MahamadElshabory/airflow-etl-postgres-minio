@@ -1,78 +1,33 @@
-# Dockerized Apache Airflow ETL Pipeline
+## Airflow ETL Pipeline: PostgreSQL ↔ MinIO/S3
+# Overview
 
-This project demonstrates a local data engineering pipeline using Apache Airflow, PostgreSQL, MinIO/S3, and Docker.
+This project automates a common data engineering task: moving data out of an operational database and into object storage on a schedule, reliably and with visibility into failures. Rather than a one-off script, it's built as a proper Airflow DAG — meaning the pipeline has defined dependencies between steps, automatic retries if a step fails, and centralized logging so you can see exactly what happened and when.
 
-## Project Overview
+The underlying pattern — extract, transform, load, with orchestration handling scheduling and failure recovery — is the same one used to automate things far beyond this specific pipeline: nightly data warehouse syncs, scheduled report generation, or even automated model retraining jobs. I built this specifically to understand DAG design, task dependencies, and Airflow's Hooks/Sensors for connecting to external systems (PostgreSQL and MinIO/S3) rather than just moving data with a plain script.
 
-The pipeline extracts daily order data from PostgreSQL, writes the result into a temporary CSV/text file, and uploads it to a MinIO bucket using Airflow hooks. The project also includes examples of Airflow scheduling, PythonOperator, BashOperator, XCom, TaskFlow API, PostgreSQL Operator, S3 Sensor, retries, and dependency management.
+Everything runs in Docker Compose — Airflow, PostgreSQL, and MinIO — so the whole pipeline can be spun up identically on any machine.
 
-## Tech Stack
+What it does
+Extracts data from PostgreSQL on a schedule
+Transforms/validates it in a Python task
+Loads the result into MinIO/S3 as object storage
+Uses Airflow Sensors to wait on upstream conditions before running downstream tasks
+Fully Dockerized — Airflow, PostgreSQL, and MinIO all run via Docker Compose
+Tech Stack
 
-- Apache Airflow
-- Docker & Docker Compose
-- PostgreSQL
-- MinIO/S3
-- Python
-- Airflow Hooks, Operators, and Sensors
+Apache Airflow PostgreSQL MinIO/S3 Docker Compose Python TaskFlow API
 
-## Main Features
+Architecture
+PostgreSQL --[Extract Task]--> Transform Task --[Load Task]--> MinIO/S3
+                     ↑
+        Airflow DAG orchestrates scheduling, retries, and logging across all tasks
+Run locally
+bash
+docker-compose up --build
 
-- Dockerized Airflow environment
-- PostgreSQL integration using PostgresHook
-- MinIO/S3 integration using S3Hook
-- S3KeySensor to wait for files
-- Daily DAG scheduling
-- Retry handling and logging
-- XCom example using PythonOperator
-- TaskFlow API example
-- Custom Airflow image with Python dependencies
+Airflow UI available at localhost:8080.
 
-## Main Pipeline
-
-1. Airflow connects to PostgreSQL.
-2. It extracts orders for a specific execution date.
-3. The data is written to a temporary file.
-4. The file is uploaded to MinIO/S3 under the `orders/` folder.
-5. The output can be checked from the MinIO console.
-
-## How to Run
-
-```bash
-docker compose up -d --build
-
-
-## Required Airflow Connections
-
-Create these connections from:
-
-Airflow UI → Admin → Connections
-
-### 1. PostgreSQL Connection
-
-| Field | Value |
-|---|---|
-| Conn Id | postgres_localhost |
-| Conn Type | Postgres |
-| Host | postgres |
-| Schema | airflow |
-| Login | airflow |
-| Password | airflow |
-| Port | 5432 |
-
-Note: DBeaver connects from the host machine using `localhost:5433`, but Airflow containers connect using `postgres:5432`.
-
-### 2. MinIO / S3 Connection
-
-| Field | Value |
-|---|---|
-| Conn Id | minio_conn |
-| Conn Type | Amazon Web Services |
-
-Extra:
-
-```json
-{
-  "aws_access_key_id": "AKIAIOSFODNN7EXAMPLE",
-  "aws_secret_access_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
-  "host": "http://host.docker.internal:9000"
-}
+Possible next steps
+Add data quality checks as a dedicated Airflow task
+Add alerting on task failure (e.g. Slack/email on DAG failure)
+Parameterize the DAG for multiple source tables
